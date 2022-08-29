@@ -1,0 +1,29 @@
+name: reviewdog
+
+on: pull_request
+
+jobs:
+  # 構文チェック用ジョブ（PHP_CodeSniffer + reviewdog）
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      # リポジトリからチェックアウト
+      - uses: actions/checkout@v2
+      # reviewdogをセットアップ
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+      # PHP環境をセットアップ
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0' # 環境に合わせて変更してください
+          tools: composer:v2
+      # composer install
+      - name: Resolve dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+      # 構文チェックを実行し、実行結果をreviewdogに渡す
+      - name: lint
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }} # secrets.GITHUB_TOKENは発行せずに呼び出せる
+        run: ./vendor/bin/phpcs --report=emacs --standard=phpcs.xml ./ | reviewdog -reporter=github-pr-review -efm='%f:%l:%c:%m'
