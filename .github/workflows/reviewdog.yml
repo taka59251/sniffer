@@ -20,8 +20,8 @@ jobs:
           php-version: '8.0' # 環境に合わせて変更してください
           tools: composer:v2
       # composer install
-        - uses: actions/checkout@v2
-        - uses: chekalsky/phpcs-action@v1
+      - name: install dependencies
+        run: pwd && composer install --no-progress --prefer-dist --optimize-autoloader
       # 構文チェックを実行し、実行結果をreviewdogに渡す
       - name: lint
         env:
