@@ -26,4 +26,4 @@ jobs:
       - name: lint
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }} # secrets.GITHUB_TOKENは発行せずに呼び出せる
-        run: ls -la && ./vendor/bin/phpcs --report=emacs --standard=phpcs.xml ./ | reviewdog -reporter=github-pr-review -efm='%f:%l:%c:%m'
+        run: ls -la && ./vendor/bin/phpcs --report=emacs --standard=./my-app/phpcs.xml ./my-app/ | reviewdog -reporter=github-pr-review -efm='%f:%l:%c:%m'
