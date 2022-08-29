@@ -1,16 +1,54 @@
-name: PHP Code Sniffer
+name: reviewdog
+
 on: pull_request
+
 jobs:
-  phpcs:
+  # 構文チェック用ジョブ（PHP_CodeSniffer + reviewdog）
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install PHP CodeSniffer
-        run: |
-          cd my-app
-          composer require --dev dealerdirect/phpcodesniffer-composer-installer
-      - name: Check coding standards
-        run: |
-          cd ma-app
-          vendor/bin/phpcs
+      # リポジトリからチェックアウト
+      - uses: actions/checkout@v2
+      # reviewdogをセットアップ
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+      # PHP環境をセットアップ
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0' # 環境に合わせて変更してください
+          tools: composer:v2
+      # composer install
+      - name: Resolve dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+      # 構文チェックを実行し、実行結果をreviewdogに渡す
+      - name: lint
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }} # secrets.GITHUB_TOKENは発行せずに呼び出せる
+        run: ./vendor/bin/phpcs --report=emacs --standard=phpcs.xml ./ | reviewdog -reporter=github-pr-review -efm='%f:%l:%c:%m'
+
+  # 静的解析用ジョブ（PHPStan + reviewdog）
+  analyse:
+    runs-on: ubuntu-latest
+    steps:
+      # リポジトリからチェックアウト
+      - uses: actions/checkout@v2
+      # reviewdogをセットアップ
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+      # PHP環境をセットアップ
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0' # 環境に合わせて変更してください
+          tools: composer:v2
+      # composer install
+      - name: Resolve dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+      # PHPStanを実行し、実行結果をreviewdogに渡す
+      - name: Run PHPstan
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./vendor/bin/phpstan analyse --error-format=raw --no-progress --memory-limit=1G | reviewdog -reporter=github-pr-review -f=phpstan # PHPStan側の出力がデフォルトの--error-format=githubでは読み取れないので、--error-format=rawを指定しています
