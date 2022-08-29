@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "**.php"
-      - "./phpcs.xml"
+      - "./my-app/phpcs.xml"
       - ".github/workflows/phpcs.yml"
 
 jobs:
