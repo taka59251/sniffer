@@ -1,31 +1,29 @@
-name: reviewdog
+name: "CI"
 
-on: pull_request
+on:
+  pull_request:
+    paths:
+      - "**.php"
+      - "phpcs.xml"
+      - ".github/workflows/phpcs.yml"
 
 jobs:
-  # 構文チェック用ジョブ（PHP_CodeSniffer + reviewdog）
-  lint:
+  phpcs:
     runs-on: ubuntu-latest
     steps:
-      # リポジトリからチェックアウト
       - uses: actions/checkout@v2
-      # reviewdogをセットアップ
-      - uses: reviewdog/action-setup@v1
         with:
-          reviewdog_version: latest
-      # PHP環境をセットアップ
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+          fetch-depth: 0 # important!
+
+      # we may use whatever way to install phpcs, just specify the path on the next step
+      # however, curl seems to be the fastest
+      - name: Install PHP_CodeSniffer
+        run: |
+          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+          php phpcs.phar --version
+
+      - uses: thenabeel/action-phpcs@v8
         with:
-          php-version: '8.0' # 環境に合わせて変更してください
-          tools: composer:v2
-      # composer install
-        - name: Install dependencies
-          uses: php-actions/composer@v6
-          with:
-            command: composer install --no-progress --prefer-dist --optimize-autoloader
-      # 構文チェックを実行し、実行結果をreviewdogに渡す
-      - name: lint
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }} # secrets.GITHUB_TOKENは発行せずに呼び出せる
-        run: ./vendor/bin/phpcs --report=emacs --standard=phpcs.xml ./ | reviewdog -reporter=github-pr-review -efm='%f:%l:%c:%m'
+          files: "**.php" # you may customize glob as needed
+          phpcs_path: php phpcs.phar
+          standard: phpcs.xml
