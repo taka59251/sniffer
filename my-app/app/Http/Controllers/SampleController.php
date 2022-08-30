@@ -8,7 +8,7 @@ class SampleController extends Controller
 {
     public function test()
     {
-        $a = [
+        $a=[
             '1' => 'ok',
             '2' => 'ng'
         ];
