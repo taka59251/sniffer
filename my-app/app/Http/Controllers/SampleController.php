@@ -13,7 +13,7 @@ class SampleController extends Controller
             '2' => 'ng'
         ];
 
-        $b = array('ok', 'ng');
+        $b= array('ok', 'ng');
 
         print_r($a);
         print_r($b);
